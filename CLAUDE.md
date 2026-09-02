@@ -33,6 +33,7 @@ looks right.
 ```
 src/
   components/
+    ErrorBoundary.tsx  App-level runtime-crash catcher, wraps the Canvas
     Experience/       Canvas + top-level wiring, context-loss watcher
     Camera/            Mouse-parallax + scroll-dolly camera rig
     Scene/             Background/fog, WorldGroup (the interaction hub)
