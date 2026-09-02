@@ -9,12 +9,13 @@ import { useTapTrigger } from '../../hooks/useTapTrigger'
 import { useScrollProgress } from '../../hooks/useScrollProgress'
 
 interface ExperienceProps {
+  keyword: string
   reducedMotion: boolean
   onReady: () => void
   onContextLost: () => void
 }
 
-export default function Experience({ reducedMotion, onReady, onContextLost }: ExperienceProps) {
+export default function Experience({ keyword, reducedMotion, onReady, onContextLost }: ExperienceProps) {
   const mouse = useMouseInteraction()
   const drag = useDragRotation()
   const tap = useTapTrigger()
@@ -30,7 +31,14 @@ export default function Experience({ reducedMotion, onReady, onContextLost }: Ex
     >
       <ContextLossWatcher onLost={onContextLost} />
       <CameraRig mouse={mouse} drag={drag} scroll={scroll} reducedMotion={reducedMotion} />
-      <Scene mouse={mouse} drag={drag} tap={tap} scroll={scroll} reducedMotion={reducedMotion} />
+      <Scene
+        keyword={keyword}
+        mouse={mouse}
+        drag={drag}
+        tap={tap}
+        scroll={scroll}
+        reducedMotion={reducedMotion}
+      />
       <PostProcessing />
     </Canvas>
   )

@@ -1,13 +1,18 @@
 # interactive-art
 
-**Touch the Space** — an experimental, interactive 3D main-screen built around a single
-Korean Hangul character, **혼 (魂, "soul")**, rendered as a field of thousands of GPU
-particles. The letterform is never a static mesh: it continuously breathes through a
-looping cycle — precise → vibration → organic deformation → liquid flow → dispersion →
-chaotic atmospheric field → attraction → reconstruction — while staying loosely
-recognizable throughout, and it reacts directly to the pointer.
+**Touch the Space** — an experimental, interactive 3D main-screen that renders any typed
+keyword (default: **혼**, 魂, "soul") as a field of thousands of GPU particles. The
+letterform is never a static mesh: it continuously breathes through a looping cycle —
+precise → vibration → organic deformation → liquid flow → dispersion → chaotic
+atmospheric field → attraction → reconstruction — while staying loosely recognizable
+throughout, and it reacts directly to the pointer.
 
-Dark, minimal, monochrome. No UI beyond a hint that fades away the moment you touch it.
+Type a new word (Korean or Latin, up to 6 characters) into the field at the top and
+press Enter — the current text dissolves into the same dispersion burst a fast drag
+triggers, and reforms as the new one, instead of snapping directly to it.
+
+Dark, minimal, monochrome. No UI beyond that input and a hint that fades away the
+moment you touch the space.
 
 ## Interactions
 
@@ -76,7 +81,7 @@ src/
     ParticleSystem/     HangulParticleField (the glyph), AtmosphereField (background dust)
     InteractiveObject/ Thin wrapper choosing which glyph/behavior is "the object"
     Effects/           Post-processing (Bloom + Vignette)
-    UI/                Interaction hint, shared fallback screen
+    UI/                Interaction hint, keyword input, shared fallback screen
   hooks/               Pointer position, drag rotation + inertia, tap detection, scroll
                         progress, device tier, reduced-motion, first-interaction
   shaders/             GLSL, one concern per file
@@ -89,7 +94,8 @@ Implemented so far, in order: basic 3D scene → the Hangul particle system itse
 drag-to-rotate with smoothing → pointer repulsion + drag-energy bursts → click/tap
 ripple → inertia + the interaction hint → reduced-motion, WebGL-fallback, and
 runtime-crash/context-loss handling → Bloom/Vignette post-processing → scroll-driven
-camera dolly and particle expansion.
+camera dolly and particle expansion → a typed keyword replacing the fixed glyph, with
+the swap itself hidden inside a dispersion burst rather than an instant cut.
 
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,

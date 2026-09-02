@@ -7,6 +7,7 @@ import type { DragRotationState } from '../../hooks/useDragRotation'
 import type { TapEvent } from '../../hooks/useTapTrigger'
 
 interface SceneProps {
+  keyword: string
   mouse: MutableRefObject<MouseState>
   drag: MutableRefObject<DragRotationState>
   tap: MutableRefObject<TapEvent>
@@ -14,7 +15,7 @@ interface SceneProps {
   reducedMotion: boolean
 }
 
-export default function Scene({ mouse, drag, tap, scroll, reducedMotion }: SceneProps) {
+export default function Scene({ keyword, mouse, drag, tap, scroll, reducedMotion }: SceneProps) {
   return (
     <>
       <color attach="background" args={['#020203']} />
@@ -22,7 +23,7 @@ export default function Scene({ mouse, drag, tap, scroll, reducedMotion }: Scene
 
       <WorldGroup drag={drag} mouse={mouse} tap={tap}>
         <AtmosphereField reducedMotion={reducedMotion} scroll={scroll} />
-        <InteractiveObject mouse={mouse} reducedMotion={reducedMotion} scroll={scroll} />
+        <InteractiveObject keyword={keyword} mouse={mouse} reducedMotion={reducedMotion} scroll={scroll} />
       </WorldGroup>
     </>
   )
