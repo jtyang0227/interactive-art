@@ -1,4 +1,5 @@
 uniform vec3 uColor;
+uniform float uGlobalAlpha;
 
 varying float vAlpha;
 varying float vCore;
@@ -18,5 +19,5 @@ void main() {
   // blending means pushing alpha past 1 genuinely reads as brighter, not
   // just more opaque.
   float flashAlpha = shape * vAlpha + vRipple * 0.9;
-  gl_FragColor = vec4(uColor, flashAlpha);
+  gl_FragColor = vec4(uColor, flashAlpha * uGlobalAlpha);
 }

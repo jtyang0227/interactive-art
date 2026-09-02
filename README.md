@@ -9,7 +9,9 @@ throughout, and it reacts directly to the pointer.
 
 Type a new word (Korean or Latin, up to 6 characters) into the field at the top and
 press Enter — the current text dissolves into the same dispersion burst a fast drag
-triggers, and reforms as the new one, instead of snapping directly to it.
+triggers, and reforms as the new one, instead of snapping directly to it. The word
+you replaced doesn't just vanish: it lingers as a faint, cooler-toned echo for a
+few seconds before fading out.
 
 Dark, minimal, monochrome. No UI beyond that input and a hint that fades away the
 moment you touch the space.
@@ -96,8 +98,11 @@ ripple → inertia + the interaction hint → reduced-motion, WebGL-fallback, an
 runtime-crash/context-loss handling → Bloom/Vignette post-processing → scroll-driven
 camera dolly and particle expansion → a typed keyword replacing the fixed glyph, with
 the swap itself hidden inside a dispersion burst rather than an instant cut → a
-cursor depth-lens effect (see `docs/planning/2026-09-02-next-interactive-features.md`
-for the fuller list this was picked from).
+cursor depth-lens effect → an echo layer that keeps the previous keyword lingering
+faintly (a cooler, dimmer, lower-density copy of the same particle field) for a few
+seconds after each change before fading out (see
+`docs/planning/2026-09-02-next-interactive-features.md` for the fuller list these
+were picked from).
 
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,
