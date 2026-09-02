@@ -54,7 +54,6 @@ export default function HangulParticleField({
     // than let it clip early.
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 6)
     return geo
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [char, count])
 
   const material = useMemo(
