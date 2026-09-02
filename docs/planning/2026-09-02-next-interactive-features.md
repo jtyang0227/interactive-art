@@ -11,7 +11,7 @@
 
 ## 후보 기능 목록
 
-### 1. 커서 아래 깊이 렌즈 효과 (Sub-surface Depth Push / Lensing)
+### 1. 커서 아래 깊이 렌즈 효과 (Sub-surface Depth Push / Lensing) — ✅ 구현 완료
 - **설명**: 마우스가 파티클 위에 있을 때, 기존 반발(repulsion) 로직에 더해 커서 아래 파티클들의 Z축 깊이를 살짝 밀어내고 확대되는 듯한 렌즈 왜곡을 준다.
 - **왜 필요한가**: `particle.vert.glsl`에 이미 있는 `uPointer`/`uPointerActive` 반발 로직을 그대로 확장하는 것이라 구현 리스크가 가장 낮으면서, "마우스가 공간을 조종한다"는 기획서 3항 목표를 시각적으로 더 강화한다.
 - **예상 난이도**: 낮음

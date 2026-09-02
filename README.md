@@ -18,7 +18,7 @@ moment you touch the space.
 
 | Input | Effect |
 | --- | --- |
-| Move the pointer | The camera drifts subtly off-axis (parallax); nearby particles are pushed away |
+| Move the pointer | The camera drifts subtly off-axis (parallax); nearby particles are pushed away and the ones right under the cursor bulge toward the camera, like a lens passing over the field |
 | Drag | Rotates the whole particle space — horizontal → yaw, vertical → pitch (clamped) |
 | Release mid-drag | The rotation coasts on its own inertia and decays, instead of stopping dead |
 | Fast drag | Spikes "drag energy", flinging particles outward like a dispersion peak before it settles |
@@ -95,7 +95,9 @@ drag-to-rotate with smoothing → pointer repulsion + drag-energy bursts → cli
 ripple → inertia + the interaction hint → reduced-motion, WebGL-fallback, and
 runtime-crash/context-loss handling → Bloom/Vignette post-processing → scroll-driven
 camera dolly and particle expansion → a typed keyword replacing the fixed glyph, with
-the swap itself hidden inside a dispersion burst rather than an instant cut.
+the swap itself hidden inside a dispersion burst rather than an instant cut → a
+cursor depth-lens effect (see `docs/planning/2026-09-02-next-interactive-features.md`
+for the fuller list this was picked from).
 
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,

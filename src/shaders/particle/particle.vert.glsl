@@ -165,6 +165,14 @@ void main() {
   float repelStrength = uPointerActive * smoothstep(repelRadius, 0.0, pointerDist) * 0.55;
   pos += normalize(toParticle + vec3(1e-4)) * repelStrength;
 
+  // Depth lens: particles closer to the pointer (a tighter radius than the
+  // repulsion above, so it reads as the lens's "hot spot") bulge toward the
+  // camera and read larger/brighter — like a magnifying glass passing over
+  // the field rather than just pushing it aside.
+  float lensRadius = 0.4;
+  float lensMask = uPointerActive * smoothstep(lensRadius, 0.0, pointerDist);
+  pos.z += lensMask * 0.22;
+
   // Click / tap: a ring expands outward from the tap point over ~0.9s,
   // pushing whatever it passes through and briefly flashing brighter, then
   // the whole envelope fades to nothing — no separate "active" flag needed,
@@ -196,12 +204,12 @@ void main() {
   float dist = max(-mvPosition.z, 0.001);
 
   float sizeVariance = mix(0.4, 1.0, aSeed.z);
-  float size = uBaseSize * sizeVariance * mix(1.0, 0.72, chaos * 0.6) * (1.0 + ripple * 0.8);
+  float size = uBaseSize * sizeVariance * mix(1.0, 0.72, chaos * 0.6) * (1.0 + ripple * 0.8) * (1.0 + lensMask * 0.3);
 
   gl_PointSize = size * uPixelRatio / dist;
   gl_Position = projectionMatrix * mvPosition;
 
-  vCore = (1.0 - chaos * 0.65) * (1.0 - uScrollExpand * 0.4);
-  vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y) * (1.0 - uScrollExpand * 0.35);
+  vCore = (1.0 - chaos * 0.65) * (1.0 - uScrollExpand * 0.4) + lensMask * 0.15;
+  vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y) * (1.0 - uScrollExpand * 0.35) + lensMask * 0.08;
   vRipple = ripple;
 }
