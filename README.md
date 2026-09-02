@@ -26,6 +26,7 @@ moment you touch the space.
 | Fast drag | Spikes "drag energy", flinging particles outward like a dispersion peak before it settles |
 | Click / tap | A ring expands from that point over ~0.9s, pushing particles it passes and flashing brighter, then fades |
 | Scroll | Dollies the camera back and expands the whole particle field outward, reversibly |
+| Two-finger twist / pinch (touch) | Twisting swirls the field around the view axis; pinching in/out compresses or spreads it — both spring back to normal the instant a finger lifts |
 
 Works with mouse and touch alike (built on the Pointer Events API). Scroll is
 wheel/scrollbar-driven — it's not layered onto the same single-finger touch gesture
@@ -102,8 +103,16 @@ cursor depth-lens effect → an echo layer that keeps the previous keyword linge
 faintly (a cooler, dimmer, lower-density copy of the same particle field) for a few
 seconds after each change before fading out → a short-lived wake that follows the
 pointer's actual recent path rather than only ever displacing particles under the
-live cursor position (see `docs/planning/2026-09-02-next-interactive-features.md`
-for the fuller list these were picked from).
+live cursor position → two-finger twist and pinch on touch devices (see
+`docs/planning/2026-09-02-next-interactive-features.md` for the fuller list these
+were picked from).
+
+Building the twist/pinch gesture surfaced a real, pre-existing bug: the pointer
+position driving the lens/repulsion/trail effects never had a way to know a touch
+had ended (only a mouse "rests in place"; a lifted finger doesn't), so a two-finger
+gesture — or any touch, really — left the field permanently deformed at the last
+touch point after release. Fixed by tracking pointer activity explicitly rather than
+inferring it purely from raycast success.
 
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,

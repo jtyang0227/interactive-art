@@ -101,7 +101,8 @@ export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupPro
     const energyTarget = Math.min(angularSpeed * 0.35, 1.4)
     dragEnergy.current += (energyTarget - dragEnergy.current) * Math.min(delta * 4, 1)
 
-    pointerActive.current = raycastLocal(mouse.current.x, mouse.current.y, camera, pointerPoint.current)
+    pointerActive.current =
+      mouse.current.active && raycastLocal(mouse.current.x, mouse.current.y, camera, pointerPoint.current)
 
     if (tap.current.id !== lastTapId.current) {
       lastTapId.current = tap.current.id

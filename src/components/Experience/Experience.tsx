@@ -7,6 +7,7 @@ import { useMouseInteraction } from '../../hooks/useMouseInteraction'
 import { useDragRotation } from '../../hooks/useDragRotation'
 import { useTapTrigger } from '../../hooks/useTapTrigger'
 import { useScrollProgress } from '../../hooks/useScrollProgress'
+import { useMultiTouch } from '../../hooks/useMultiTouch'
 
 interface ExperienceProps {
   keyword: string
@@ -20,6 +21,7 @@ export default function Experience({ keyword, reducedMotion, onReady, onContextL
   const drag = useDragRotation()
   const tap = useTapTrigger()
   const scroll = useScrollProgress()
+  const multiTouch = useMultiTouch()
 
   return (
     <Canvas
@@ -37,6 +39,7 @@ export default function Experience({ keyword, reducedMotion, onReady, onContextL
         drag={drag}
         tap={tap}
         scroll={scroll}
+        multiTouch={multiTouch}
         reducedMotion={reducedMotion}
       />
       <PostProcessing />

@@ -10,6 +10,8 @@ uniform vec3 uClickPoint;
 uniform float uClickTime;
 uniform float uMotionScale;
 uniform float uScrollExpand;
+uniform float uVortexStrength;
+uniform float uPinchScale;
 
 // Must match TRAIL_COUNT in WorldPointerContext.ts.
 #define TRAIL_COUNT 16
@@ -196,6 +198,13 @@ void main() {
   }
   pos += trailDisplacement * 0.3;
 
+  // Two-finger twist: a vortex force swirling around the view axis, sign
+  // and strength driven by how fast the gesture is rotating (see
+  // useMultiTouch — this is a scalar per frame, not a position, so unlike
+  // the pointer/click effects above it needs no local-space transform).
+  vec3 vortexTangent = normalize(vec3(-pos.y, pos.x, 0.0) + vec3(1e-4));
+  pos += vortexTangent * uVortexStrength * 0.4;
+
   // Click / tap: a ring expands outward from the tap point over ~0.9s,
   // pushing whatever it passes through and briefly flashing brighter, then
   // the whole envelope fades to nothing — no separate "active" flag needed,
@@ -222,6 +231,13 @@ void main() {
   // direct scroll feedback rather than ambient motion.
   pos += outward * uScrollExpand * 1.1;
   pos *= 1.0 + uScrollExpand * 0.35;
+
+  // Two-finger pinch compresses/expands the whole field spatially — the
+  // practical stand-in for "resampling particle density" the brief asks
+  // for, since actually re-sampling the point cloud every frame isn't
+  // affordable: squeezing the same particle count into less volume reads
+  // as denser, spreading it out reads as sparser.
+  pos *= uPinchScale;
 
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   float dist = max(-mvPosition.z, 0.001);

@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getPerformanceTier, type PerformanceTier } from '../../hooks/useDevicePerformance'
+import type { MultiTouchState } from '../../hooks/useMultiTouch'
 import atmosphereVert from '../../shaders/atmosphere/atmosphere.vert.glsl?raw'
 import atmosphereFrag from '../../shaders/atmosphere/atmosphere.frag.glsl?raw'
 
@@ -20,11 +21,13 @@ const ATMOSPHERE_COUNT: Record<PerformanceTier, number> = {
 interface AtmosphereFieldProps {
   reducedMotion: boolean
   scroll: MutableRefObject<number>
+  multiTouch: MutableRefObject<MultiTouchState>
 }
 
-export default function AtmosphereField({ reducedMotion, scroll }: AtmosphereFieldProps) {
+export default function AtmosphereField({ reducedMotion, scroll, multiTouch }: AtmosphereFieldProps) {
   const { gl } = useThree()
   const count = useMemo(() => ATMOSPHERE_COUNT[getPerformanceTier()], [])
+  const pinchScale = useRef(1)
 
   const geometry = useMemo(() => {
     const position = new Float32Array(count * 3)
@@ -57,6 +60,7 @@ export default function AtmosphereField({ reducedMotion, scroll }: AtmosphereFie
           uBaseSize: { value: 14 },
           uMotionScale: { value: 1 },
           uScrollExpand: { value: 0 },
+          uPinchScale: { value: 1 },
           uColor: { value: new THREE.Color('#aab0c4') },
         },
         transparent: true,
@@ -73,10 +77,13 @@ export default function AtmosphereField({ reducedMotion, scroll }: AtmosphereFie
     }
   }, [geometry, material])
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     material.uniforms.uTime.value = state.clock.elapsedTime
     material.uniforms.uMotionScale.value = reducedMotion ? 0.2 : 1
     material.uniforms.uScrollExpand.value = scroll.current
+
+    pinchScale.current += (multiTouch.current.pinchScale - pinchScale.current) * Math.min(delta * 4, 1)
+    material.uniforms.uPinchScale.value = pinchScale.current
   })
 
   return <points geometry={geometry} material={material} frustumCulled={false} />

@@ -30,6 +30,12 @@ export function useDragRotation(sensitivity = 0.006) {
   const last = useRef<{ x: number; y: number; time: number } | null>(null)
   const velocity = useRef({ x: 0, y: 0 }) // rad/ms, smoothed
   const inertiaFrame = useRef<number | null>(null)
+  // The specific pointer this drag is tracking. A second finger touching
+  // down mid-drag hands the gesture to useMultiTouch instead of letting
+  // its events get mixed into this one's delta math (which otherwise reads
+  // the *distance between the two fingers* as drag movement — wild,
+  // incorrect spins).
+  const activePointerId = useRef<number | null>(null)
 
   useEffect(() => {
     const stopInertia = () => {
@@ -66,14 +72,24 @@ export function useDragRotation(sensitivity = 0.006) {
     }
 
     const handleDown = (event: PointerEvent) => {
+      if (activePointerId.current !== null && activePointerId.current !== event.pointerId) {
+        // A second pointer joined — stop tracking rotation from either
+        // until we're back down to zero active pointers.
+        rotation.current.isDragging = false
+        last.current = null
+        activePointerId.current = null
+        return
+      }
       stopInertia()
       rotation.current.isDragging = true
+      activePointerId.current = event.pointerId
       last.current = { x: event.clientX, y: event.clientY, time: performance.now() }
       velocity.current = { x: 0, y: 0 }
     }
 
     const handleMove = (event: PointerEvent) => {
       if (!rotation.current.isDragging || !last.current) return
+      if (event.pointerId !== activePointerId.current) return
       const now = performance.now()
       const dt = Math.max(now - last.current.time, 1)
       const dx = event.clientX - last.current.x
@@ -89,9 +105,11 @@ export function useDragRotation(sensitivity = 0.006) {
       rotation.current.x = clampPitch(rotation.current.x + dy * sensitivity)
     }
 
-    const handleUp = () => {
+    const handleUp = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId.current) return
       if (!rotation.current.isDragging) return
       rotation.current.isDragging = false
+      activePointerId.current = null
       last.current = null
       runInertia()
     }

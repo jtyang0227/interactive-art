@@ -3,6 +3,7 @@ import type { MutableRefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { MouseState } from '../../hooks/useMouseInteraction'
+import type { MultiTouchState } from '../../hooks/useMultiTouch'
 import { sampleGlyphPoints } from '../../utils/textSampler'
 import { getPerformanceTier, type PerformanceTier } from '../../hooks/useDevicePerformance'
 import { TRAIL_COUNT, useWorldPointer } from '../Scene/WorldPointerContext'
@@ -51,6 +52,7 @@ interface HangulParticleFieldProps {
   keyword?: string
   mouse: MutableRefObject<MouseState>
   scroll: MutableRefObject<number>
+  multiTouch: MutableRefObject<MultiTouchState>
   reducedMotion: boolean
 }
 
@@ -58,6 +60,7 @@ export default function HangulParticleField({
   keyword = '혼',
   mouse,
   scroll,
+  multiTouch,
   reducedMotion,
 }: HangulParticleFieldProps) {
   const { gl } = useThree()
@@ -74,6 +77,8 @@ export default function HangulParticleField({
   // Seconds since the last keyword change; Infinity means "no echo yet",
   // which keeps the fade envelope at 0 without any extra active flag.
   const echoAge = useRef(Infinity)
+  const vortexStrength = useRef(0)
+  const pinchScale = useRef(1)
 
   const geometry = useMemo(() => {
     const base = sampleGlyphPoints(keyword, { count })
@@ -140,6 +145,8 @@ export default function HangulParticleField({
           uClickTime: { value: -1000 },
           uMotionScale: { value: 1 },
           uScrollExpand: { value: 0 },
+          uVortexStrength: { value: 0 },
+          uPinchScale: { value: 1 },
           uGlobalAlpha: { value: 1 },
           uColor: { value: new THREE.Color('#eef1f8') },
           ...createEmptyTrailUniforms(),
@@ -152,9 +159,11 @@ export default function HangulParticleField({
   )
 
   // The echo is a passive memory, not another interactive object: it never
-  // reacts to the pointer or clicks (those uniforms stay at their inert
-  // defaults), just breathes very gently — uMotionScale here is fixed low
-  // rather than tied to reducedMotion, since it's already subtle by design.
+  // reacts to the pointer, clicks, trail, or vortex twist (those uniforms
+  // stay at their inert defaults), just breathes very gently — uMotionScale
+  // here is fixed low rather than tied to reducedMotion, since it's already
+  // subtle by design. It does still follow scroll and pinch, though — those
+  // are the whole scene changing scale, not a targeted interaction.
   const echoMaterial = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -173,6 +182,8 @@ export default function HangulParticleField({
           uClickTime: { value: -1000 },
           uMotionScale: { value: 0.15 },
           uScrollExpand: { value: 0 },
+          uVortexStrength: { value: 0 },
+          uPinchScale: { value: 1 },
           uGlobalAlpha: { value: 0 },
           uColor: { value: new THREE.Color('#c3cbe6') },
           ...createEmptyTrailUniforms(),
@@ -298,6 +309,18 @@ export default function HangulParticleField({
 
     material.uniforms.uScrollExpand.value = scroll.current
 
+    // Two-finger twist/pinch: both come from a plain ref (not
+    // WorldGroup/context) since they're scalars, not positions that need
+    // local-space resolution. Vortex is smoothed quickly so it still feels
+    // responsive; pinch eases more gently so it reads as springing back
+    // rather than snapping the instant a second finger lifts.
+    const vortexTarget = Math.max(-1.5, Math.min(1.5, multiTouch.current.vortexVelocity * 0.8))
+    vortexStrength.current += (vortexTarget - vortexStrength.current) * Math.min(delta * 6, 1)
+    material.uniforms.uVortexStrength.value = vortexStrength.current
+
+    pinchScale.current += (multiTouch.current.pinchScale - pinchScale.current) * Math.min(delta * 4, 1)
+    material.uniforms.uPinchScale.value = pinchScale.current
+
     // Mouse trail: copy WorldGroup's ring buffer straight into the
     // uniform arrays. The echo material never touches these, so its
     // trail stays permanently inert.
@@ -325,6 +348,7 @@ export default function HangulParticleField({
     echoMaterial.uniforms.uTime.value = t
     echoMaterial.uniforms.uProgress.value = progress
     echoMaterial.uniforms.uScrollExpand.value = scroll.current
+    echoMaterial.uniforms.uPinchScale.value = pinchScale.current
     echoMaterial.uniforms.uGlobalAlpha.value = echoEnvelope * ECHO_PEAK_ALPHA
   })
 

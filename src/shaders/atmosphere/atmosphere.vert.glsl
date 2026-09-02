@@ -3,6 +3,7 @@ uniform float uPixelRatio;
 uniform float uBaseSize;
 uniform float uMotionScale;
 uniform float uScrollExpand;
+uniform float uPinchScale;
 
 attribute vec3 aSeed;
 
@@ -21,6 +22,9 @@ void main() {
   // The background dust spreads out further as the whole space expands on
   // scroll — same "space growing" beat as the glyph, just cheaper.
   pos *= 1.0 + uScrollExpand * 0.6;
+  // A two-finger pinch compresses/expands the whole space the same way,
+  // so the background reads as part of the same field being squeezed.
+  pos *= uPinchScale;
 
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   float dist = max(-mvPosition.z, 0.001);
