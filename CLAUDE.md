@@ -102,6 +102,33 @@ threaded as a separate prop instead.
   store for a second input source — the existing pattern (refs passed as
   props, one context only for what `WorldGroup` itself resolves) is
   deliberate and has held up through several features.
+- **A `window`/`document`-level pointer listener that must fire regardless of
+  what child elements do needs `{ capture: true }`.** `KeywordInput`
+  deliberately calls `stopPropagation()` on `pointerdown` so typing never also
+  drags the world or fires a click ripple — a bubble-phase listener on
+  `window` would never see that event at all. `useFirstInteraction` hit this
+  for real: tapping the input as the very first touch left the hint stuck
+  visible forever until its listener moved to capture phase. Any future
+  global pointer listener needs the same treatment.
+
+## Mobile / viewport gotchas
+
+- **Never let a text input's computed font-size go below 16px.** iOS Safari
+  auto-zooms the page on focusing a smaller input; combined with the
+  scroll-driven camera dolly, the zoomed-in page reads as "nothing happened
+  after typing." `KeywordInput`'s input font-size is hardcoded `16px` for
+  this — don't swap it back to something rem/vw-relative that could compute
+  smaller on some device.
+- **Don't recompute scroll-driven state on every bare `resize` event.** A
+  mobile on-screen keyboard opening/closing fires `resize` (height only,
+  page hasn't actually changed shape). `useScrollProgress` only recomputes
+  when `window.innerWidth` changes, to avoid spiking `uScrollExpand` right as
+  a keyword is submitted and the keyboard dismisses. Apply the same
+  width-only guard to any other resize-driven layout math.
+- **Fixed-position UI needs `env(safe-area-inset-*)` clearance** for
+  notch/home-indicator devices (see `KeywordInput`, `InteractionHint`) —
+  `index.html`'s `viewport-fit=cover` is required for those `env()` values to
+  resolve to anything nonzero.
 
 ## Testing in this environment
 

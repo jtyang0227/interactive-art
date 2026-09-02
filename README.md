@@ -114,6 +114,17 @@ gesture — or any touch, really — left the field permanently deformed at the 
 touch point after release. Fixed by tracking pointer activity explicitly rather than
 inferring it purely from raycast success.
 
+A mobile usability pass fixed a cluster of real device-specific bugs: the keyword
+input's font-size was small enough to trigger iOS Safari's auto-zoom-on-focus,
+leaving the page zoomed into a cropped region right after typing; a mobile
+keyboard opening/closing fired plain `resize` events that could spike the
+scroll-driven "space expanding" effect at the same moment; and the "Drag to
+Explore" hint could get stuck on screen forever if the very first tap landed on
+the keyword input rather than the canvas. The camera also now adapts to portrait
+aspect ratios (phone, tablet held upright) instead of leaving a large gap of
+unused space below the glyph, and the fixed-position UI clears notches/home
+indicators via safe-area insets.
+
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,
   but there's no further content decided yet for it to hand off to — right now it just

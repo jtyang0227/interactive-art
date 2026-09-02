@@ -31,7 +31,12 @@ export default function KeywordInput({ onSubmit }: KeywordInputProps) {
     <form
       onSubmit={handleSubmit}
       onPointerDown={(event) => event.stopPropagation()}
-      style={{ position: 'fixed', top: '6%', left: '50%', transform: 'translateX(-50%)' }}
+      style={{
+        position: 'fixed',
+        top: 'max(6%, calc(env(safe-area-inset-top) + 12px))',
+        left: '50%',
+        transform: 'translateX(-50%)',
+      }}
     >
       <input
         type="text"
@@ -44,11 +49,17 @@ export default function KeywordInput({ onSubmit }: KeywordInputProps) {
           border: 'none',
           borderBottom: '1px solid rgba(238, 241, 248, 0.25)',
           color: 'rgba(238, 241, 248, 0.85)',
-          fontSize: '0.7rem',
+          // 16px is the line iOS Safari uses to decide whether to zoom the
+          // page in on focus — anything smaller and tapping this input
+          // leaves the whole page zoomed into a cropped region afterward,
+          // which reads as "the new glyph never showed up". This has to
+          // stay an absolute px value, not something rem/vw-relative that
+          // could still compute under 16px on some device.
+          fontSize: '16px',
           letterSpacing: '0.3em',
           textTransform: 'uppercase',
           textAlign: 'center',
-          padding: '0.4em 0.2em',
+          padding: '0.5em 0.2em',
           outline: 'none',
           width: '14rem',
           maxWidth: '60vw',
