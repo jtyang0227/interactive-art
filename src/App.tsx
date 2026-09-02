@@ -44,6 +44,12 @@ function App() {
         </ErrorBoundary>
       </div>
       <InteractionHint visible={!hasInteracted} />
+      {/* The scene itself is pinned full-viewport (position: fixed) and
+          reacts to scroll purely as a read of window.scrollY — this
+          spacer exists only to give the document somewhere to scroll to.
+          There is no second section to scroll into yet; the effect settles
+          once fully expanded near the bottom. */}
+      <div aria-hidden style={{ height: '220vh' }} />
     </>
   )
 }

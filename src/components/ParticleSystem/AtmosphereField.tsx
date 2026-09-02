@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import type { MutableRefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { getPerformanceTier, type PerformanceTier } from '../../hooks/useDevicePerformance'
@@ -18,9 +19,10 @@ const ATMOSPHERE_COUNT: Record<PerformanceTier, number> = {
  */
 interface AtmosphereFieldProps {
   reducedMotion: boolean
+  scroll: MutableRefObject<number>
 }
 
-export default function AtmosphereField({ reducedMotion }: AtmosphereFieldProps) {
+export default function AtmosphereField({ reducedMotion, scroll }: AtmosphereFieldProps) {
   const { gl } = useThree()
   const count = useMemo(() => ATMOSPHERE_COUNT[getPerformanceTier()], [])
 
@@ -54,6 +56,7 @@ export default function AtmosphereField({ reducedMotion }: AtmosphereFieldProps)
           uPixelRatio: { value: Math.min(gl.getPixelRatio(), 2) },
           uBaseSize: { value: 14 },
           uMotionScale: { value: 1 },
+          uScrollExpand: { value: 0 },
           uColor: { value: new THREE.Color('#aab0c4') },
         },
         transparent: true,
@@ -73,6 +76,7 @@ export default function AtmosphereField({ reducedMotion }: AtmosphereFieldProps)
   useFrame((state) => {
     material.uniforms.uTime.value = state.clock.elapsedTime
     material.uniforms.uMotionScale.value = reducedMotion ? 0.2 : 1
+    material.uniforms.uScrollExpand.value = scroll.current
   })
 
   return <points geometry={geometry} material={material} frustumCulled={false} />

@@ -2,6 +2,7 @@ uniform float uTime;
 uniform float uPixelRatio;
 uniform float uBaseSize;
 uniform float uMotionScale;
+uniform float uScrollExpand;
 
 attribute vec3 aSeed;
 
@@ -16,6 +17,10 @@ void main() {
   pos.x += sin(t * (0.6 + aSeed.x) + aSeed.y * 6.283) * 0.35 * uMotionScale;
   pos.y += cos(t * (0.5 + aSeed.y) + aSeed.z * 6.283) * 0.3 * uMotionScale;
   pos.z += sin(t * (0.4 + aSeed.z) + aSeed.x * 6.283) * 0.4 * uMotionScale;
+
+  // The background dust spreads out further as the whole space expands on
+  // scroll — same "space growing" beat as the glyph, just cheaper.
+  pos *= 1.0 + uScrollExpand * 0.6;
 
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   float dist = max(-mvPosition.z, 0.001);

@@ -9,6 +9,7 @@ uniform float uDragEnergy;
 uniform vec3 uClickPoint;
 uniform float uClickTime;
 uniform float uMotionScale;
+uniform float uScrollExpand;
 
 attribute vec3 aBase;
 attribute vec3 aSeed;
@@ -184,6 +185,13 @@ void main() {
   // the "object scale up" beat — decaying with the same envelope.
   pos += outward * rippleEnvelope * rippleEnvelope * 0.12;
 
+  // Scroll expands the whole field outward from its own center — the
+  // "space growing" beat from the brief's scroll section — independent of
+  // the auto-cycle's chaos and unaffected by uMotionScale, since this is
+  // direct scroll feedback rather than ambient motion.
+  pos += outward * uScrollExpand * 1.1;
+  pos *= 1.0 + uScrollExpand * 0.35;
+
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   float dist = max(-mvPosition.z, 0.001);
 
@@ -193,7 +201,7 @@ void main() {
   gl_PointSize = size * uPixelRatio / dist;
   gl_Position = projectionMatrix * mvPosition;
 
-  vCore = 1.0 - chaos * 0.65;
-  vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y);
+  vCore = (1.0 - chaos * 0.65) * (1.0 - uScrollExpand * 0.4);
+  vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y) * (1.0 - uScrollExpand * 0.35);
   vRipple = ripple;
 }

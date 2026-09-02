@@ -18,13 +18,18 @@ Dark, minimal, monochrome. No UI beyond a hint that fades away the moment you to
 | Release mid-drag | The rotation coasts on its own inertia and decays, instead of stopping dead |
 | Fast drag | Spikes "drag energy", flinging particles outward like a dispersion peak before it settles |
 | Click / tap | A ring expands from that point over ~0.9s, pushing particles it passes and flashing brighter, then fades |
+| Scroll | Dollies the camera back and expands the whole particle field outward, reversibly |
 
-Works with mouse and touch alike (built on the Pointer Events API).
+Works with mouse and touch alike (built on the Pointer Events API). Scroll is
+wheel/scrollbar-driven — it's not layered onto the same single-finger touch gesture
+already claimed by drag-to-rotate.
 
 ## Tech stack
 
 - React 18 + TypeScript + Vite
-- Three.js + [`@react-three/fiber`](https://github.com/pmndrs/react-three-fiber)
+- Three.js + [`@react-three/fiber`](https://github.com/pmndrs/react-three-fiber) +
+  [`@react-three/postprocessing`](https://github.com/pmndrs/react-postprocessing) (Bloom
+  + Vignette only, skipped entirely on the low device tier)
 - Hand-written GLSL (classic 3D simplex noise + an analytic curl-noise flow field),
   no shader-authoring libraries
 - No global state library — all per-frame data lives in refs and GPU uniforms, never
@@ -65,14 +70,15 @@ devices (`hooks/useDevicePerformance.ts`).
 ```
 src/
   components/
-    Experience/       Canvas + top-level wiring
-    Camera/            Mouse-parallax camera rig
+    Experience/       Canvas + top-level wiring, context-loss watcher
+    Camera/            Mouse-parallax + scroll-dolly camera rig
     Scene/             Background, WorldGroup (drag rotation + raycasting hub), fog
     ParticleSystem/     HangulParticleField (the glyph), AtmosphereField (background dust)
     InteractiveObject/ Thin wrapper choosing which glyph/behavior is "the object"
-    UI/                Interaction hint, WebGL fallback
-  hooks/               Pointer position, drag rotation + inertia, tap detection,
-                        device tier, reduced-motion, first-interaction
+    Effects/           Post-processing (Bloom + Vignette)
+    UI/                Interaction hint, shared fallback screen
+  hooks/               Pointer position, drag rotation + inertia, tap detection, scroll
+                        progress, device tier, reduced-motion, first-interaction
   shaders/             GLSL, one concern per file
   utils/               Glyph → point cloud sampling, WebGL feature check
 ```
@@ -81,8 +87,16 @@ src/
 
 Implemented so far, in order: basic 3D scene → the Hangul particle system itself →
 drag-to-rotate with smoothing → pointer repulsion + drag-energy bursts → click/tap
-ripple → inertia + the interaction hint → reduced-motion and WebGL-fallback support.
+ripple → inertia + the interaction hint → reduced-motion, WebGL-fallback, and
+runtime-crash/context-loss handling → Bloom/Vignette post-processing → scroll-driven
+camera dolly and particle expansion.
 
-Not yet built: scroll-driven transition into further page content (needs that content
-decided first), audio reactivity, and a device-tiered post-processing pass (bloom /
-vignette / chromatic aberration).
+Deliberately not built yet:
+- **A second page section to scroll into.** The scroll effect is real and reversible,
+  but there's no further content decided yet for it to hand off to — right now it just
+  settles into a fully expanded atmospheric field near the bottom of the scroll range.
+- **Audio reactivity.** The original brief marks this optional, and building it without
+  a decided audio source (a bundled track vs. microphone input vs. something generative)
+  would mean guessing at a feature with real UX and privacy implications (microphone
+  permission prompts, autoplay policy, what track to even ship) rather than implementing
+  something actually asked for.

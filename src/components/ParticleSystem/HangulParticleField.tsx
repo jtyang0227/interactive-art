@@ -22,12 +22,14 @@ const CYCLE_SECONDS = 22
 interface HangulParticleFieldProps {
   char?: string
   mouse: MutableRefObject<MouseState>
+  scroll: MutableRefObject<number>
   reducedMotion: boolean
 }
 
 export default function HangulParticleField({
   char = '혼',
   mouse,
+  scroll,
   reducedMotion,
 }: HangulParticleFieldProps) {
   const { gl } = useThree()
@@ -48,8 +50,9 @@ export default function HangulParticleField({
     geo.setAttribute('aBase', new THREE.BufferAttribute(base, 3))
     geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 3))
     // The shader displaces well beyond the glyph's resting bounds during
-    // dispersion, so pad the culling sphere rather than let it clip early.
-    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4.5)
+    // dispersion and scroll expansion, so pad the culling sphere rather
+    // than let it clip early.
+    geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 6)
     return geo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [char, count])
@@ -71,6 +74,7 @@ export default function HangulParticleField({
           uClickPoint: { value: new THREE.Vector3(9999, 9999, 9999) },
           uClickTime: { value: -1000 },
           uMotionScale: { value: 1 },
+          uScrollExpand: { value: 0 },
           uColor: { value: new THREE.Color('#eef1f8') },
         },
         transparent: true,
@@ -142,6 +146,8 @@ export default function HangulParticleField({
 
     material.uniforms.uClickPoint.value.copy(pointer.clickPoint.current)
     material.uniforms.uClickTime.value = pointer.clickTime.current
+
+    material.uniforms.uScrollExpand.value = scroll.current
   })
 
   return <points geometry={geometry} material={material} frustumCulled={false} />
