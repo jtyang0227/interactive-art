@@ -22,9 +22,14 @@ const CYCLE_SECONDS = 22
 interface HangulParticleFieldProps {
   char?: string
   mouse: MutableRefObject<MouseState>
+  reducedMotion: boolean
 }
 
-export default function HangulParticleField({ char = '혼', mouse }: HangulParticleFieldProps) {
+export default function HangulParticleField({
+  char = '혼',
+  mouse,
+  reducedMotion,
+}: HangulParticleFieldProps) {
   const { gl } = useThree()
   const pointer = useWorldPointer()
   const count = useMemo(() => PARTICLE_COUNT[getPerformanceTier()], [])
@@ -65,6 +70,7 @@ export default function HangulParticleField({ char = '혼', mouse }: HangulParti
           uDragEnergy: { value: 0 },
           uClickPoint: { value: new THREE.Vector3(9999, 9999, 9999) },
           uClickTime: { value: -1000 },
+          uMotionScale: { value: 1 },
           uColor: { value: new THREE.Color('#eef1f8') },
         },
         transparent: true,
@@ -113,8 +119,14 @@ export default function HangulParticleField({ char = '혼', mouse }: HangulParti
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
+    // Reduced motion doesn't freeze the cycle (a fully static "art piece"
+    // reads as broken), it just stretches and dampens it: the shape still
+    // slowly breathes, but the per-particle jitter and swirl driving it
+    // are cut way down by uMotionScale below.
+    const cycleSeconds = reducedMotion ? CYCLE_SECONDS * 3 : CYCLE_SECONDS
     material.uniforms.uTime.value = t
-    material.uniforms.uProgress.value = (t % CYCLE_SECONDS) / CYCLE_SECONDS
+    material.uniforms.uProgress.value = (t % cycleSeconds) / cycleSeconds
+    material.uniforms.uMotionScale.value = reducedMotion ? 0.22 : 1
 
     const m = material.uniforms.uMouse.value as THREE.Vector2
     m.x += (mouse.current.x - m.x) * 0.05

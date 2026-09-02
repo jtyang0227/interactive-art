@@ -5,7 +5,12 @@ import { useMouseInteraction } from '../../hooks/useMouseInteraction'
 import { useDragRotation } from '../../hooks/useDragRotation'
 import { useTapTrigger } from '../../hooks/useTapTrigger'
 
-export default function Experience() {
+interface ExperienceProps {
+  reducedMotion: boolean
+  onReady: () => void
+}
+
+export default function Experience({ reducedMotion, onReady }: ExperienceProps) {
   const mouse = useMouseInteraction()
   const drag = useDragRotation()
   const tap = useTapTrigger()
@@ -16,9 +21,10 @@ export default function Experience() {
       camera={{ fov: 50, near: 0.1, far: 100, position: [0, 0, 6] }}
       dpr={[1, 2]}
       gl={{ antialias: true }}
+      onCreated={onReady}
     >
-      <CameraRig mouse={mouse} drag={drag} />
-      <Scene mouse={mouse} drag={drag} tap={tap} />
+      <CameraRig mouse={mouse} drag={drag} reducedMotion={reducedMotion} />
+      <Scene mouse={mouse} drag={drag} tap={tap} reducedMotion={reducedMotion} />
     </Canvas>
   )
 }

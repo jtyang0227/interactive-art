@@ -8,6 +8,7 @@ uniform float uPointerActive;
 uniform float uDragEnergy;
 uniform vec3 uClickPoint;
 uniform float uClickTime;
+uniform float uMotionScale;
 
 attribute vec3 aBase;
 attribute vec3 aSeed;
@@ -144,10 +145,14 @@ void main() {
   );
   vec3 outward = normalize(aBase + vec3(0.0001));
 
+  // uMotionScale dampens only the ambient, automatic part of the motion
+  // (auto-cycle jitter/flow/dispersion) for prefers-reduced-motion. It
+  // deliberately does not touch the repulsion or ripple below — those are
+  // direct feedback for something the user just did, not incidental motion.
   vec3 displacement =
-      fine * vibration * (0.03 + mouseAmount * 0.01) +
+      (fine * vibration * (0.03 + mouseAmount * 0.01) +
       flow * chaos * (0.85 + mouseAmount * 0.15) +
-      outward * chaos * chaos * 0.6;
+      outward * chaos * chaos * 0.6) * uMotionScale;
 
   vec3 pos = aBase + displacement;
 
