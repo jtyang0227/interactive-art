@@ -16,7 +16,7 @@ export default function Scene({ mouse, drag }: SceneProps) {
       <color attach="background" args={['#020203']} />
       <fog attach="fog" args={['#020203', 5, 15]} />
 
-      <WorldGroup drag={drag}>
+      <WorldGroup drag={drag} mouse={mouse}>
         <AtmosphereField />
         <InteractiveObject mouse={mouse} />
       </WorldGroup>

@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import type { MouseState } from '../../hooks/useMouseInteraction'
 import { sampleGlyphPoints } from '../../utils/textSampler'
 import { getPerformanceTier, type PerformanceTier } from '../../hooks/useDevicePerformance'
+import { useWorldPointer } from '../Scene/WorldPointerContext'
 import particleVert from '../../shaders/particle/particle.vert.glsl?raw'
 import particleFrag from '../../shaders/particle/particle.frag.glsl?raw'
 
@@ -25,6 +26,7 @@ interface HangulParticleFieldProps {
 
 export default function HangulParticleField({ char = '혼', mouse }: HangulParticleFieldProps) {
   const { gl } = useThree()
+  const pointer = useWorldPointer()
   const count = useMemo(() => PARTICLE_COUNT[getPerformanceTier()], [])
 
   const geometry = useMemo(() => {
@@ -58,6 +60,9 @@ export default function HangulParticleField({ char = '혼', mouse }: HangulParti
           uPixelRatio: { value: Math.min(gl.getPixelRatio(), 2) },
           uBaseSize: { value: 32 },
           uMouse: { value: new THREE.Vector2(0, 0) },
+          uPointer: { value: new THREE.Vector3(9999, 9999, 9999) },
+          uPointerActive: { value: 0 },
+          uDragEnergy: { value: 0 },
           uColor: { value: new THREE.Color('#eef1f8') },
         },
         transparent: true,
@@ -112,6 +117,14 @@ export default function HangulParticleField({ char = '혼', mouse }: HangulParti
     const m = material.uniforms.uMouse.value as THREE.Vector2
     m.x += (mouse.current.x - m.x) * 0.05
     m.y += (mouse.current.y - m.y) * 0.05
+
+    // Pointer position and drag energy both come from WorldGroup, already
+    // resolved into this field's local space so repulsion tracks correctly
+    // even while the whole scene is spinning.
+    material.uniforms.uPointer.value.copy(pointer.point.current)
+    material.uniforms.uPointerActive.value = pointer.active.current ? 1 : 0
+    const energy = material.uniforms.uDragEnergy
+    energy.value += (pointer.dragEnergy.current - energy.value) * 0.1
   })
 
   return <points geometry={geometry} material={material} frustumCulled={false} />

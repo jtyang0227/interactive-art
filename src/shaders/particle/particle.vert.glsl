@@ -3,6 +3,9 @@ uniform float uProgress;
 uniform float uPixelRatio;
 uniform float uBaseSize;
 uniform vec2 uMouse;
+uniform vec3 uPointer;
+uniform float uPointerActive;
+uniform float uDragEnergy;
 
 attribute vec3 aBase;
 attribute vec3 aSeed;
@@ -118,6 +121,12 @@ void main() {
   float vibration = smoothstep(0.02, 0.10, t) * (1.0 - smoothstep(0.14, 0.30, t));
   float chaos = smoothstep(0.06, 0.55, t) * (1.0 - smoothstep(0.80, 0.99, t));
 
+  // A fast drag spikes uDragEnergy; folding it into the same chaos term the
+  // auto-cycle uses means a hard spin flings particles outward exactly like
+  // a dispersion peak, then eases back to whatever the cycle is doing on
+  // its own as the drag settles — "flung out, slowly returns to orbit".
+  chaos = clamp(max(chaos, uDragEnergy * 0.7), 0.0, 1.0);
+
   float mouseAmount = clamp(length(uMouse), 0.0, 1.0);
 
   // A single curl-noise evaluation drives the large-scale flow; it is the
@@ -138,6 +147,14 @@ void main() {
       outward * chaos * chaos * 0.6;
 
   vec3 pos = aBase + displacement;
+
+  // Particles within reach of the pointer get nudged away from it — a
+  // gentle field-level push, not a hard collision.
+  vec3 toParticle = pos - uPointer;
+  float pointerDist = length(toParticle);
+  float repelRadius = 0.85;
+  float repelStrength = uPointerActive * smoothstep(repelRadius, 0.0, pointerDist) * 0.55;
+  pos += normalize(toParticle + vec3(1e-4)) * repelStrength;
 
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   float dist = max(-mvPosition.z, 0.001);
