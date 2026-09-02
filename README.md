@@ -20,7 +20,7 @@ moment you touch the space.
 
 | Input | Effect |
 | --- | --- |
-| Move the pointer | The camera drifts subtly off-axis (parallax); nearby particles are pushed away and the ones right under the cursor bulge toward the camera, like a lens passing over the field |
+| Move the pointer | The camera drifts subtly off-axis (parallax); nearby particles are pushed away and the ones right under the cursor bulge toward the camera, like a lens passing over the field; a short wake lingers along the path just traveled |
 | Drag | Rotates the whole particle space — horizontal → yaw, vertical → pitch (clamped) |
 | Release mid-drag | The rotation coasts on its own inertia and decays, instead of stopping dead |
 | Fast drag | Spikes "drag energy", flinging particles outward like a dispersion peak before it settles |
@@ -100,9 +100,10 @@ camera dolly and particle expansion → a typed keyword replacing the fixed glyp
 the swap itself hidden inside a dispersion burst rather than an instant cut → a
 cursor depth-lens effect → an echo layer that keeps the previous keyword lingering
 faintly (a cooler, dimmer, lower-density copy of the same particle field) for a few
-seconds after each change before fading out (see
-`docs/planning/2026-09-02-next-interactive-features.md` for the fuller list these
-were picked from).
+seconds after each change before fading out → a short-lived wake that follows the
+pointer's actual recent path rather than only ever displacing particles under the
+live cursor position (see `docs/planning/2026-09-02-next-interactive-features.md`
+for the fuller list these were picked from).
 
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,

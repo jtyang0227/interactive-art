@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import type { MouseState } from '../../hooks/useMouseInteraction'
 import { sampleGlyphPoints } from '../../utils/textSampler'
 import { getPerformanceTier, type PerformanceTier } from '../../hooks/useDevicePerformance'
-import { useWorldPointer } from '../Scene/WorldPointerContext'
+import { TRAIL_COUNT, useWorldPointer } from '../Scene/WorldPointerContext'
 import particleVert from '../../shaders/particle/particle.vert.glsl?raw'
 import particleFrag from '../../shaders/particle/particle.frag.glsl?raw'
 
@@ -34,6 +34,17 @@ const ECHO_PEAK_ALPHA = 1.1
 function smoothstepJS(edge0: number, edge1: number, x: number) {
   const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1)
   return t * t * (3 - 2 * t)
+}
+
+// Inert trail state: every slot "infinitely old" so the shader's fade
+// math zeroes it out. Used verbatim by the echo material (which never
+// reacts to the pointer) and as the main material's starting point before
+// the first frame copies in real data from WorldGroup.
+function createEmptyTrailUniforms() {
+  return {
+    uTrailPoints: { value: Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3()) },
+    uTrailAges: { value: new Array(TRAIL_COUNT).fill(999) },
+  }
 }
 
 interface HangulParticleFieldProps {
@@ -131,6 +142,7 @@ export default function HangulParticleField({
           uScrollExpand: { value: 0 },
           uGlobalAlpha: { value: 1 },
           uColor: { value: new THREE.Color('#eef1f8') },
+          ...createEmptyTrailUniforms(),
         },
         transparent: true,
         depthWrite: false,
@@ -163,6 +175,7 @@ export default function HangulParticleField({
           uScrollExpand: { value: 0 },
           uGlobalAlpha: { value: 0 },
           uColor: { value: new THREE.Color('#c3cbe6') },
+          ...createEmptyTrailUniforms(),
         },
         transparent: true,
         depthWrite: false,
@@ -284,6 +297,20 @@ export default function HangulParticleField({
     material.uniforms.uClickTime.value = pointer.clickTime.current
 
     material.uniforms.uScrollExpand.value = scroll.current
+
+    // Mouse trail: copy WorldGroup's ring buffer straight into the
+    // uniform arrays. The echo material never touches these, so its
+    // trail stays permanently inert.
+    const trailPointsUniform = material.uniforms.uTrailPoints.value as THREE.Vector3[]
+    const trailAgesUniform = material.uniforms.uTrailAges.value as number[]
+    for (let i = 0; i < TRAIL_COUNT; i++) {
+      trailPointsUniform[i].set(
+        pointer.trailPoints.current[i * 3],
+        pointer.trailPoints.current[i * 3 + 1],
+        pointer.trailPoints.current[i * 3 + 2],
+      )
+      trailAgesUniform[i] = pointer.trailAges.current[i]
+    }
 
     // Echo: shares the main field's clock/scroll so it drifts and expands
     // in sync, but its visibility is purely a function of time since the

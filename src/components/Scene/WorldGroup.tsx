@@ -6,7 +6,7 @@ import { Group, Plane, Raycaster, Vector2, Vector3 } from 'three'
 import type { DragRotationState } from '../../hooks/useDragRotation'
 import type { MouseState } from '../../hooks/useMouseInteraction'
 import type { TapEvent } from '../../hooks/useTapTrigger'
-import { WorldPointerContext } from './WorldPointerContext'
+import { TRAIL_COUNT, WorldPointerContext } from './WorldPointerContext'
 
 interface WorldGroupProps {
   drag: MutableRefObject<DragRotationState>
@@ -17,17 +17,13 @@ interface WorldGroupProps {
 
 const FAR_SENTINEL = new Vector3(9999, 9999, 9999)
 
-/**
- * Wraps the scene's content so a drag can rotate the whole space at once.
- * The group never snaps to the drag target directly — it eases toward it
- * every frame, which is what keeps the rotation feeling weighted rather
- * than glued to the pointer.
- *
- * It also does double duty as the interaction hub for its children: it
- * raycasts the pointer (and any new tap) against its own local z=0 plane
- * — so hit points stay correct as the group spins — and tracks how fast
- * it's currently rotating, publishing all of it through context.
- */
+// How often a new trail sample is recorded while the pointer is active.
+const TRAIL_SAMPLE_INTERVAL = 0.05
+// Sentinel age for a slot that's never been sampled — large enough that
+// the shader's own (much shorter) fade window always treats it as fully
+// expired, regardless of what that fade duration is tuned to.
+const TRAIL_MAX_AGE = 999
+
 export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupProps) {
   const groupRef = useRef<Group>(null)
 
@@ -44,8 +40,24 @@ export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupPro
   const clickTime = useRef(-1000)
   const lastTapId = useRef(0)
 
+  // Ring buffer of recent pointer positions — a short wake trailing the
+  // cursor. Ages start at TRAIL_MAX_AGE (effectively "never sampled") so
+  // unfilled slots have no effect on the shader's fade math.
+  const trailPoints = useRef(new Float32Array(TRAIL_COUNT * 3))
+  const trailAges = useRef(new Float32Array(TRAIL_COUNT).fill(TRAIL_MAX_AGE))
+  const trailWriteIndex = useRef(0)
+  const trailSampleTimer = useRef(0)
+
   const contextValue = useMemo(
-    () => ({ point: pointerPoint, active: pointerActive, dragEnergy, clickPoint, clickTime }),
+    () => ({
+      point: pointerPoint,
+      active: pointerActive,
+      dragEnergy,
+      clickPoint,
+      clickTime,
+      trailPoints,
+      trailAges,
+    }),
     [],
   )
 
@@ -96,6 +108,20 @@ export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupPro
       if (raycastLocal(tap.current.x, tap.current.y, camera, clickPoint.current)) {
         clickTime.current = clock.elapsedTime
       }
+    }
+
+    for (let i = 0; i < TRAIL_COUNT; i++) {
+      trailAges.current[i] += delta
+    }
+    trailSampleTimer.current += delta
+    if (pointerActive.current && trailSampleTimer.current >= TRAIL_SAMPLE_INTERVAL) {
+      trailSampleTimer.current = 0
+      const idx = trailWriteIndex.current
+      trailPoints.current[idx * 3] = pointerPoint.current.x
+      trailPoints.current[idx * 3 + 1] = pointerPoint.current.y
+      trailPoints.current[idx * 3 + 2] = pointerPoint.current.z
+      trailAges.current[idx] = 0
+      trailWriteIndex.current = (idx + 1) % TRAIL_COUNT
     }
   })
 

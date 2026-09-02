@@ -11,6 +11,11 @@ uniform float uClickTime;
 uniform float uMotionScale;
 uniform float uScrollExpand;
 
+// Must match TRAIL_COUNT in WorldPointerContext.ts.
+#define TRAIL_COUNT 16
+uniform vec3 uTrailPoints[TRAIL_COUNT];
+uniform float uTrailAges[TRAIL_COUNT];
+
 attribute vec3 aBase;
 attribute vec3 aSeed;
 
@@ -173,6 +178,24 @@ void main() {
   float lensMask = uPointerActive * smoothstep(lensRadius, 0.0, pointerDist);
   pos.z += lensMask * 0.22;
 
+  // Mouse trail: a short history of recent pointer positions keeps nudging
+  // nearby particles for a moment after the pointer has actually moved on,
+  // so motion lingers along the path instead of only ever existing exactly
+  // under the live cursor. Unsampled slots carry a huge age (see
+  // WorldGroup's TRAIL_MAX_AGE) so ageFade is already 0 for them — no
+  // separate "how many slots are actually in use" branch needed.
+  vec3 trailDisplacement = vec3(0.0);
+  float trailAmount = 0.0;
+  for (int i = 0; i < TRAIL_COUNT; i++) {
+    float ageFade = 1.0 - smoothstep(0.0, 1.1, uTrailAges[i]);
+    vec3 toTrail = pos - uTrailPoints[i];
+    float trailDist = length(toTrail);
+    float trailMask = smoothstep(0.5, 0.0, trailDist) * ageFade;
+    trailDisplacement += normalize(toTrail + vec3(1e-4)) * trailMask;
+    trailAmount = max(trailAmount, trailMask);
+  }
+  pos += trailDisplacement * 0.3;
+
   // Click / tap: a ring expands outward from the tap point over ~0.9s,
   // pushing whatever it passes through and briefly flashing brighter, then
   // the whole envelope fades to nothing — no separate "active" flag needed,
@@ -204,12 +227,12 @@ void main() {
   float dist = max(-mvPosition.z, 0.001);
 
   float sizeVariance = mix(0.4, 1.0, aSeed.z);
-  float size = uBaseSize * sizeVariance * mix(1.0, 0.72, chaos * 0.6) * (1.0 + ripple * 0.8) * (1.0 + lensMask * 0.3);
+  float size = uBaseSize * sizeVariance * mix(1.0, 0.72, chaos * 0.6) * (1.0 + ripple * 0.8) * (1.0 + lensMask * 0.3) * (1.0 + trailAmount * 0.25);
 
   gl_PointSize = size * uPixelRatio / dist;
   gl_Position = projectionMatrix * mvPosition;
 
-  vCore = (1.0 - chaos * 0.65) * (1.0 - uScrollExpand * 0.4) + lensMask * 0.15;
-  vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y) * (1.0 - uScrollExpand * 0.35) + lensMask * 0.08;
+  vCore = (1.0 - chaos * 0.65) * (1.0 - uScrollExpand * 0.4) + lensMask * 0.15 + trailAmount * 0.12;
+  vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y) * (1.0 - uScrollExpand * 0.35) + lensMask * 0.08 + trailAmount * 0.1;
   vRipple = ripple;
 }
