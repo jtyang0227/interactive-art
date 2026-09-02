@@ -2,6 +2,7 @@ uniform vec3 uColor;
 
 varying float vAlpha;
 varying float vCore;
+varying float vRipple;
 
 void main() {
   vec2 uv = gl_PointCoord - 0.5;
@@ -13,5 +14,9 @@ void main() {
 
   if (shape < 0.01) discard;
 
-  gl_FragColor = vec4(uColor, shape * vAlpha);
+  // A brief overexposed flash as the click ring passes through — additive
+  // blending means pushing alpha past 1 genuinely reads as brighter, not
+  // just more opaque.
+  float flashAlpha = shape * vAlpha + vRipple * 0.9;
+  gl_FragColor = vec4(uColor, flashAlpha);
 }

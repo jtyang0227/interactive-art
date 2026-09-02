@@ -12,6 +12,13 @@ export interface WorldPointerValue {
   /** Smoothed magnitude of the world's current rotation velocity — spikes
    * on a fast drag, decays once it settles. */
   dragEnergy: MutableRefObject<number>
+  /** Local-space position of the most recent tap/click, resolved the same
+   * way as `point`. */
+  clickPoint: MutableRefObject<Vector3>
+  /** state.clock.elapsedTime at the moment of the most recent tap/click;
+   * far in the past before the first one so envelope math naturally reads
+   * as "no ripple yet". */
+  clickTime: MutableRefObject<number>
 }
 
 export const WorldPointerContext = createContext<WorldPointerValue | null>(null)

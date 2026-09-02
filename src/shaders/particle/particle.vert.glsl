@@ -6,12 +6,15 @@ uniform vec2 uMouse;
 uniform vec3 uPointer;
 uniform float uPointerActive;
 uniform float uDragEnergy;
+uniform vec3 uClickPoint;
+uniform float uClickTime;
 
 attribute vec3 aBase;
 attribute vec3 aSeed;
 
 varying float vAlpha;
 varying float vCore;
+varying float vRipple;
 
 // --- Ashima classic 3D simplex noise -------------------------------------
 vec4 permute(vec4 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
@@ -156,15 +159,36 @@ void main() {
   float repelStrength = uPointerActive * smoothstep(repelRadius, 0.0, pointerDist) * 0.55;
   pos += normalize(toParticle + vec3(1e-4)) * repelStrength;
 
+  // Click / tap: a ring expands outward from the tap point over ~0.9s,
+  // pushing whatever it passes through and briefly flashing brighter, then
+  // the whole envelope fades to nothing — no separate "active" flag needed,
+  // uClickTime starts far enough in the past that this is a no-op until
+  // the first tap actually happens.
+  float clickElapsed = uTime - uClickTime;
+  float rippleEnvelope = 1.0 - smoothstep(0.0, 0.9, clickElapsed);
+  rippleEnvelope = clamp(rippleEnvelope, 0.0, 1.0) * step(0.0, clickElapsed);
+
+  vec3 toClick = pos - uClickPoint;
+  float clickDist = length(toClick);
+  float waveRadius = clickElapsed * 3.2;
+  float ringMask = exp(-pow((clickDist - waveRadius) / 0.4, 2.0));
+  float ripple = ringMask * rippleEnvelope;
+
+  pos += normalize(toClick + vec3(1e-4)) * ripple * 0.7;
+  // The whole form also puffs outward from its own center for an instant —
+  // the "object scale up" beat — decaying with the same envelope.
+  pos += outward * rippleEnvelope * rippleEnvelope * 0.12;
+
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   float dist = max(-mvPosition.z, 0.001);
 
   float sizeVariance = mix(0.4, 1.0, aSeed.z);
-  float size = uBaseSize * sizeVariance * mix(1.0, 0.72, chaos * 0.6);
+  float size = uBaseSize * sizeVariance * mix(1.0, 0.72, chaos * 0.6) * (1.0 + ripple * 0.8);
 
   gl_PointSize = size * uPixelRatio / dist;
   gl_Position = projectionMatrix * mvPosition;
 
   vCore = 1.0 - chaos * 0.65;
   vAlpha = mix(0.95, 0.32, chaos * 0.7) * mix(0.6, 1.0, aSeed.y);
+  vRipple = ripple;
 }

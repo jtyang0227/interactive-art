@@ -3,10 +3,12 @@ import Scene from '../Scene/Scene'
 import CameraRig from '../Camera/CameraRig'
 import { useMouseInteraction } from '../../hooks/useMouseInteraction'
 import { useDragRotation } from '../../hooks/useDragRotation'
+import { useTapTrigger } from '../../hooks/useTapTrigger'
 
 export default function Experience() {
   const mouse = useMouseInteraction()
   const drag = useDragRotation()
+  const tap = useTapTrigger()
 
   return (
     <Canvas
@@ -16,7 +18,7 @@ export default function Experience() {
       gl={{ antialias: true }}
     >
       <CameraRig mouse={mouse} drag={drag} />
-      <Scene mouse={mouse} drag={drag} />
+      <Scene mouse={mouse} drag={drag} tap={tap} />
     </Canvas>
   )
 }

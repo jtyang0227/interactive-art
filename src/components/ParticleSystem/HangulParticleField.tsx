@@ -63,6 +63,8 @@ export default function HangulParticleField({ char = '혼', mouse }: HangulParti
           uPointer: { value: new THREE.Vector3(9999, 9999, 9999) },
           uPointerActive: { value: 0 },
           uDragEnergy: { value: 0 },
+          uClickPoint: { value: new THREE.Vector3(9999, 9999, 9999) },
+          uClickTime: { value: -1000 },
           uColor: { value: new THREE.Color('#eef1f8') },
         },
         transparent: true,
@@ -125,6 +127,9 @@ export default function HangulParticleField({ char = '혼', mouse }: HangulParti
     material.uniforms.uPointerActive.value = pointer.active.current ? 1 : 0
     const energy = material.uniforms.uDragEnergy
     energy.value += (pointer.dragEnergy.current - energy.value) * 0.1
+
+    material.uniforms.uClickPoint.value.copy(pointer.clickPoint.current)
+    material.uniforms.uClickTime.value = pointer.clickTime.current
   })
 
   return <points geometry={geometry} material={material} frustumCulled={false} />
