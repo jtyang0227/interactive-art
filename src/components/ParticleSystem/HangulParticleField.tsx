@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -20,14 +20,14 @@ const PARTICLE_COUNT: Record<PerformanceTier, number> = {
 const CYCLE_SECONDS = 22
 
 interface HangulParticleFieldProps {
-  char?: string
+  keyword?: string
   mouse: MutableRefObject<MouseState>
   scroll: MutableRefObject<number>
   reducedMotion: boolean
 }
 
 export default function HangulParticleField({
-  char = '혼',
+  keyword = '혼',
   mouse,
   scroll,
   reducedMotion,
@@ -35,9 +35,15 @@ export default function HangulParticleField({
   const { gl } = useThree()
   const pointer = useWorldPointer()
   const count = useMemo(() => PARTICLE_COUNT[getPerformanceTier()], [])
+  // Spikes on a keyword change or a fast drag alike; the vertex shader
+  // folds it into the same chaos term the auto-cycle's dispersion phase
+  // uses, so either one reads as "flung apart, then settles".
+  const morphBurst = useRef(0)
+  const keywordRef = useRef(keyword)
+  const isFirstKeywordChange = useRef(true)
 
   const geometry = useMemo(() => {
-    const base = sampleGlyphPoints(char, { count })
+    const base = sampleGlyphPoints(keyword, { count })
     const seed = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
       seed[i * 3] = Math.random()
@@ -54,7 +60,15 @@ export default function HangulParticleField({
     // than let it clip early.
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 6)
     return geo
-  }, [char, count])
+    // `keyword` is intentionally left out: this only needs the text at the
+    // very first mount. Every later change (a typed keyword, or the
+    // webfont finishing its load) updates these same buffers in place via
+    // writeGlyph below instead of recreating the geometry — recreating it
+    // here would also make the disposal effect below tear down the
+    // still-in-use material, since its cleanup fires whenever `geometry`
+    // itself changes identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count])
 
   const material = useMemo(
     () =>
@@ -90,37 +104,61 @@ export default function HangulParticleField({
     }
   }, [geometry, material])
 
+  const writeGlyph = useCallback(
+    (text: string) => {
+      const sampled = sampleGlyphPoints(text, { count })
+      const baseAttr = geometry.getAttribute('aBase') as THREE.BufferAttribute
+      const posAttr = geometry.getAttribute('position') as THREE.BufferAttribute
+      ;(baseAttr.array as Float32Array).set(sampled)
+      ;(posAttr.array as Float32Array).set(sampled)
+      baseAttr.needsUpdate = true
+      posAttr.needsUpdate = true
+    },
+    [geometry, count],
+  )
+
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+
   // The glyph is first sampled from whatever font is synchronously
   // available so there is no blank first frame. Once the requested webfont
-  // actually finishes loading, re-sample and stream the refined positions
-  // into the existing GPU buffers in place.
+  // actually finishes loading, refine whatever text is showing *right
+  // now* (via the ref, since a keyword change may have already happened
+  // by the time this resolves) — silently, no burst, since this is a
+  // quality upgrade rather than something the user asked for.
   useEffect(() => {
     let cancelled = false
-
     document.fonts
       .load(`900 100px 'Noto Sans KR'`)
       .then(() => document.fonts.ready)
       .then(() => {
-        if (cancelled) return
-        const refined = sampleGlyphPoints(char, { count })
-        const baseAttr = geometry.getAttribute('aBase') as THREE.BufferAttribute
-        const posAttr = geometry.getAttribute('position') as THREE.BufferAttribute
-        ;(baseAttr.array as Float32Array).set(refined)
-        ;(posAttr.array as Float32Array).set(refined)
-        baseAttr.needsUpdate = true
-        posAttr.needsUpdate = true
+        if (!cancelled) writeGlyph(keywordRef.current)
       })
       .catch(() => {
         // Webfont failed to load — the fallback-font sample already in the
         // buffers stays as the final shape.
       })
-
     return () => {
       cancelled = true
     }
-  }, [geometry, char, count])
+  }, [writeGlyph])
 
-  useFrame((state) => {
+  // A typed keyword replacing the current one: dissolve into it rather
+  // than snapping, by writing the new base positions in at the same
+  // moment a chaos burst peaks (see useFrame below) — the particles are
+  // already flying apart from their old positions when the ones
+  // underneath change, so the swap itself is never visible.
+  useEffect(() => {
+    if (isFirstKeywordChange.current) {
+      isFirstKeywordChange.current = false
+      return
+    }
+    writeGlyph(keyword)
+    morphBurst.current = 1.4
+  }, [keyword, writeGlyph])
+
+  useFrame((state, delta) => {
     const t = state.clock.elapsedTime
     // Reduced motion doesn't freeze the cycle (a fully static "art piece"
     // reads as broken), it just stretches and dampens it: the shape still
@@ -140,8 +178,11 @@ export default function HangulParticleField({
     // even while the whole scene is spinning.
     material.uniforms.uPointer.value.copy(pointer.point.current)
     material.uniforms.uPointerActive.value = pointer.active.current ? 1 : 0
+
+    morphBurst.current *= Math.pow(0.01, delta)
     const energy = material.uniforms.uDragEnergy
-    energy.value += (pointer.dragEnergy.current - energy.value) * 0.1
+    const energyTarget = Math.max(pointer.dragEnergy.current, morphBurst.current)
+    energy.value += (energyTarget - energy.value) * 0.1
 
     material.uniforms.uClickPoint.value.copy(pointer.clickPoint.current)
     material.uniforms.uClickTime.value = pointer.clickTime.current

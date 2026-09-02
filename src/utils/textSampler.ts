@@ -34,8 +34,19 @@ export function sampleGlyphPoints(char: string, options: GlyphSampleOptions): Fl
   ctx.fillStyle = '#ffffff'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  const fontSize = canvasSize * 0.82
+
+  // Sized for a single Hangul syllable by default; a longer typed keyword
+  // gets scaled down just enough to stay inside the canvas rather than
+  // spilling off the edges and losing whatever didn't fit.
+  let fontSize = canvasSize * 0.82
   ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`
+  const maxTextWidth = canvasSize * 0.86
+  const measuredWidth = ctx.measureText(char).width
+  if (measuredWidth > maxTextWidth && measuredWidth > 0) {
+    fontSize *= maxTextWidth / measuredWidth
+    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`
+  }
+
   ctx.fillText(char, canvasSize / 2, canvasSize / 2 + fontSize * 0.03)
 
   const { data } = ctx.getImageData(0, 0, canvasSize, canvasSize)

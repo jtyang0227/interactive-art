@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react'
 import Experience from './components/Experience/Experience'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import InteractionHint from './components/UI/InteractionHint'
+import KeywordInput from './components/UI/KeywordInput'
 import SceneFallback from './components/UI/SceneFallback'
 import { useFirstInteraction } from './hooks/useFirstInteraction'
 import { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion'
 import { isWebGLAvailable } from './utils/webgl'
+
+const DEFAULT_KEYWORD = '혼'
 
 function App() {
   const hasInteracted = useFirstInteraction()
@@ -13,6 +16,7 @@ function App() {
   const webglSupported = useMemo(isWebGLAvailable, [])
   const [ready, setReady] = useState(false)
   const [contextLost, setContextLost] = useState(false)
+  const [keyword, setKeyword] = useState(DEFAULT_KEYWORD)
 
   if (!webglSupported) {
     return (
@@ -37,12 +41,14 @@ function App() {
       <div style={{ opacity: ready ? 1 : 0, transition: 'opacity 1.1s ease' }}>
         <ErrorBoundary>
           <Experience
+            keyword={keyword}
             reducedMotion={reducedMotion}
             onReady={() => setReady(true)}
             onContextLost={() => setContextLost(true)}
           />
         </ErrorBoundary>
       </div>
+      <KeywordInput onSubmit={setKeyword} />
       <InteractionHint visible={!hasInteracted} />
       {/* The scene itself is pinned full-viewport (position: fixed) and
           reacts to scroll purely as a read of window.scrollY — this
