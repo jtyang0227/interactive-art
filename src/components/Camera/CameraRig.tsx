@@ -25,6 +25,8 @@ const SCROLL_DOLLY = 3.5 // how much further back the camera pulls by scroll 100
 const PORTRAIT_REFERENCE = 1
 const PORTRAIT_ZOOM_FLOOR = 0.85 // clamp so very narrow phones don't pull the camera uncomfortably close
 
+const CAMERA_SETTLE_RATE = 0.001 // lower = camera drifts to its target position more slowly
+
 /**
  * Subtle off-axis parallax: the camera drifts a small amount toward the
  * pointer and always keeps the glyph centered. Eased back while the user
@@ -48,7 +50,7 @@ export default function CameraRig({ mouse, drag, scroll, reducedMotion }: Camera
     const targetX = mouse.current.x * 0.6 * settle
     const targetY = mouse.current.y * 0.35 * settle
     const targetZ = BASE_Z * portraitZoom + scroll.current * SCROLL_DOLLY
-    const lerpFactor = 1 - Math.pow(0.001, delta)
+    const lerpFactor = 1 - Math.pow(CAMERA_SETTLE_RATE, delta)
 
     camera.position.x += (targetX - camera.position.x) * lerpFactor
     camera.position.y += (targetY - camera.position.y) * lerpFactor

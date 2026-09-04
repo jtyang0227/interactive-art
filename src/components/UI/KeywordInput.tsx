@@ -15,6 +15,8 @@ const MAX_LENGTH = 6
  */
 export default function KeywordInput({ onSubmit }: KeywordInputProps) {
   const [value, setValue] = useState('')
+  const [focused, setFocused] = useState(false)
+  const [pulsing, setPulsing] = useState(false)
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -25,6 +27,13 @@ export default function KeywordInput({ onSubmit }: KeywordInputProps) {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur()
     }
+    // Blurring already drops the focus-brighten below a beat before the 3D
+    // dissolve reads — this briefly re-brightens it as the one
+    // acknowledgment on the 2D layer that the submission registered, then
+    // releases back through the same transition so it settles like a fast
+    // fade rather than an instant snap.
+    setPulsing(true)
+    window.setTimeout(() => setPulsing(false), 220)
   }
 
   return (
@@ -42,12 +51,18 @@ export default function KeywordInput({ onSubmit }: KeywordInputProps) {
         type="text"
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         placeholder="TYPE A WORD"
         maxLength={MAX_LENGTH}
         style={{
           background: 'transparent',
           border: 'none',
-          borderBottom: '1px solid rgba(238, 241, 248, 0.25)',
+          borderBottom:
+            focused || pulsing
+              ? '1px solid rgba(238, 241, 248, 0.7)'
+              : '1px solid rgba(238, 241, 248, 0.25)',
+          transition: 'border-color 160ms cubic-bezier(0.23, 1, 0.32, 1)',
           color: 'rgba(238, 241, 248, 0.85)',
           // 16px is the line iOS Safari uses to decide whether to zoom the
           // page in on focus — anything smaller and tapping this input

@@ -24,6 +24,9 @@ const TRAIL_SAMPLE_INTERVAL = 0.05
 // expired, regardless of what that fade duration is tuned to.
 const TRAIL_MAX_AGE = 999
 
+const ROTATION_LERP_RATE = 0.02 // lower = drag-rotation smoothing settles more slowly
+const DRAG_ENERGY_EASE_RATE = 4 // how fast dragEnergy chases its target, per second
+
 export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupProps) {
   const groupRef = useRef<Group>(null)
 
@@ -81,7 +84,7 @@ export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupPro
     const group = groupRef.current
     if (!group || delta <= 0) return
 
-    const lerpFactor = 1 - Math.pow(0.02, delta)
+    const lerpFactor = 1 - Math.pow(ROTATION_LERP_RATE, delta)
     group.rotation.x += (drag.current.x - group.rotation.x) * lerpFactor
     group.rotation.y += (drag.current.y - group.rotation.y) * lerpFactor
     // R3F recomputes matrixWorld during the render traversal, which runs
@@ -99,7 +102,7 @@ export default function WorldGroup({ drag, mouse, tap, children }: WorldGroupPro
     // Fast drags spike this; it eases back down once the rotation settles,
     // reading as "particles fling outward, then slowly return to orbit".
     const energyTarget = Math.min(angularSpeed * 0.35, 1.4)
-    dragEnergy.current += (energyTarget - dragEnergy.current) * Math.min(delta * 4, 1)
+    dragEnergy.current += (energyTarget - dragEnergy.current) * Math.min(delta * DRAG_ENERGY_EASE_RATE, 1)
 
     pointerActive.current =
       mouse.current.active && raycastLocal(mouse.current.x, mouse.current.y, camera, pointerPoint.current)

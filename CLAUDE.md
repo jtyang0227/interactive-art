@@ -10,9 +10,11 @@ particles that continuously loops through precise → vibration → organic
 deformation → liquid flow → dispersion → chaotic atmospheric field →
 attraction → reconstruction, and reacts directly to pointer/touch input.
 Monochrome, dark, minimal — no UI beyond a keyword input and a hint that
-fades on first touch. See `README.md` for the full feature/interaction list
-and `docs/planning/` for the roadmap and rationale behind what's built vs.
-deferred.
+fades on first touch. See `README.md` for the full feature/interaction list,
+`docs/planning/` for the roadmap and rationale behind what's built vs.
+deferred, and `plans/` for completed animation-audit plans (written by the
+`improve-animations` skill in `.agents/skills/`; see `plans/README.md` for
+the index).
 
 ## Commands
 
@@ -78,7 +80,13 @@ threaded as a separate prop instead.
   or `value += (target - value) * Math.min(delta * RATE, 1)`. Don't gate
   effects with a boolean "isActive" flag; let the eased value itself reach
   ~0 and stay inert. See `dragEnergy`, `morphBurst`, `vortexStrength`,
-  `pinchScale` in `HangulParticleField.tsx` for the pattern.
+  `pinchScale` in `HangulParticleField.tsx` for the pattern. Give the rate
+  itself a named module-level constant (`MORPH_BURST_DECAY_RATE`,
+  `CAMERA_SETTLE_RATE`, `ROTATION_LERP_RATE`, …) instead of hand-typing the
+  magic number inline — every decay/lerp rate in the codebase does this now
+  (`useDragRotation.ts`, `CameraRig.tsx`, `WorldGroup.tsx`,
+  `AtmosphereField.tsx`, `HangulParticleField.tsx`), and an unnamed one is
+  the outlier, not the norm.
 - **`prefers-reduced-motion` dampens ambient motion, never direct feedback.**
   The auto-cycle stretches (`CYCLE_SECONDS * 3`) and ambient jitter drops to
   ~20% via `uMotionScale`. Repulsion, lens, click ripple, trail, and vortex —

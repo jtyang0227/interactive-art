@@ -13,6 +13,8 @@ const ATMOSPHERE_COUNT: Record<PerformanceTier, number> = {
   low: 500,
 }
 
+const PINCH_EASE_RATE = 4 // how fast pinchScale chases its target, per second
+
 /**
  * Sparse, dim background particles scattered through a large volume — some
  * nearer the camera than the glyph, most receding into the dark. Gives the
@@ -82,7 +84,7 @@ export default function AtmosphereField({ reducedMotion, scroll, multiTouch }: A
     material.uniforms.uMotionScale.value = reducedMotion ? 0.2 : 1
     material.uniforms.uScrollExpand.value = scroll.current
 
-    pinchScale.current += (multiTouch.current.pinchScale - pinchScale.current) * Math.min(delta * 4, 1)
+    pinchScale.current += (multiTouch.current.pinchScale - pinchScale.current) * Math.min(delta * PINCH_EASE_RATE, 1)
     material.uniforms.uPinchScale.value = pinchScale.current
   })
 

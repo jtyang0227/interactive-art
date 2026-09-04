@@ -32,6 +32,10 @@ const ECHO_HOLD_END = 4
 const ECHO_FADE_OUT_END = 11
 const ECHO_PEAK_ALPHA = 1.1
 
+const MORPH_BURST_DECAY_RATE = 0.01 // fraction of morphBurst remaining after 1s
+const VORTEX_EASE_RATE = 6 // how fast vortexStrength chases its target, per second
+const PINCH_EASE_RATE = 4 // how fast pinchScale chases its target, per second
+
 function smoothstepJS(edge0: number, edge1: number, x: number) {
   const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1)
   return t * t * (3 - 2 * t)
@@ -299,7 +303,7 @@ export default function HangulParticleField({
     material.uniforms.uPointer.value.copy(pointer.point.current)
     material.uniforms.uPointerActive.value = pointer.active.current ? 1 : 0
 
-    morphBurst.current *= Math.pow(0.01, delta)
+    morphBurst.current *= Math.pow(MORPH_BURST_DECAY_RATE, delta)
     const energy = material.uniforms.uDragEnergy
     const energyTarget = Math.max(pointer.dragEnergy.current, morphBurst.current)
     energy.value += (energyTarget - energy.value) * 0.1
@@ -315,10 +319,10 @@ export default function HangulParticleField({
     // responsive; pinch eases more gently so it reads as springing back
     // rather than snapping the instant a second finger lifts.
     const vortexTarget = Math.max(-1.5, Math.min(1.5, multiTouch.current.vortexVelocity * 0.8))
-    vortexStrength.current += (vortexTarget - vortexStrength.current) * Math.min(delta * 6, 1)
+    vortexStrength.current += (vortexTarget - vortexStrength.current) * Math.min(delta * VORTEX_EASE_RATE, 1)
     material.uniforms.uVortexStrength.value = vortexStrength.current
 
-    pinchScale.current += (multiTouch.current.pinchScale - pinchScale.current) * Math.min(delta * 4, 1)
+    pinchScale.current += (multiTouch.current.pinchScale - pinchScale.current) * Math.min(delta * PINCH_EASE_RATE, 1)
     material.uniforms.uPinchScale.value = pinchScale.current
 
     // Mouse trail: copy WorldGroup's ring buffer straight into the

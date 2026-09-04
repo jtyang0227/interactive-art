@@ -25,7 +25,7 @@ export default function InteractionHint({ visible }: InteractionHintProps) {
         whiteSpace: 'nowrap',
         pointerEvents: 'none',
         opacity: visible ? 1 : 0,
-        transition: 'opacity 1.2s ease',
+        transition: 'opacity 1.2s cubic-bezier(0.23, 1, 0.32, 1)',
         userSelect: 'none',
       }}
     >

@@ -38,7 +38,7 @@ function App() {
 
   return (
     <>
-      <div style={{ opacity: ready ? 1 : 0, transition: 'opacity 1.1s ease' }}>
+      <div style={{ opacity: ready ? 1 : 0, transition: 'opacity 1.1s cubic-bezier(0.23, 1, 0.32, 1)' }}>
         <ErrorBoundary>
           <Experience
             keyword={keyword}

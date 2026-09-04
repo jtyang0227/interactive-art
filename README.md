@@ -125,6 +125,17 @@ aspect ratios (phone, tablet held upright) instead of leaving a large gap of
 unused space below the glyph, and the fixed-position UI clears notches/home
 indicators via safe-area insets.
 
+An animation audit (using the `improve-animations` skill against Emil Kowalski's
+craft bar — see `plans/`) confirmed the particle system's own motion was already
+correct — GPU-only transform, interruptible burst-and-decay easing, reduced-motion
+dampens ambient not direct feedback — and found four small gaps in the DOM/CSS
+layer: the keyword input had no visible focus state at all (a real accessibility
+gap, since it's the one interactive element in the whole piece), seven decay/lerp
+rates were hand-typed inline with no naming across five files, the two CSS
+opacity fades used the weak built-in `ease` instead of a proper ease-out curve,
+and submitting a keyword had no acknowledgment on the 2D layer beyond the 3D
+dissolve. All four fixed.
+
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,
   but there's no further content decided yet for it to hand off to — right now it just
