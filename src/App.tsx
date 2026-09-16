@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import Experience from './components/Experience/Experience'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import InteractionHint from './components/UI/InteractionHint'
+import KeywordChips from './components/UI/KeywordChips'
 import KeywordInput from './components/UI/KeywordInput'
 import SceneFallback from './components/UI/SceneFallback'
 import { useFirstInteraction } from './hooks/useFirstInteraction'
@@ -49,6 +50,7 @@ function App() {
         </ErrorBoundary>
       </div>
       <KeywordInput onSubmit={setKeyword} />
+      <KeywordChips keyword={keyword} onSubmit={setKeyword} />
       <InteractionHint visible={!hasInteracted} />
       {/* The scene itself is pinned full-viewport (position: fixed) and
           reacts to scroll purely as a read of window.scrollY — this

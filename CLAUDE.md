@@ -42,7 +42,8 @@ src/
     ParticleSystem/     HangulParticleField (the glyph), AtmosphereField (background dust)
     InteractiveObject/ Thin wrapper choosing which glyph/behavior is "the object"
     Effects/           Post-processing (Bloom + Vignette only)
-    UI/                Interaction hint, keyword input, WebGL-fallback screen
+    UI/                Interaction hint, keyword input + suggestion chips
+                        (KeywordChips.tsx), WebGL-fallback screen
   hooks/               One hook per input source — pointer, drag+inertia, multi-touch,
                         tap, scroll progress, device tier, reduced-motion, first-interaction
   shaders/             GLSL, one concern per file (particle/, atmosphere/)

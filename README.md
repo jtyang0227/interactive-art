@@ -8,13 +8,14 @@ atmospheric field → attraction → reconstruction — while staying loosely re
 throughout, and it reacts directly to the pointer.
 
 Type a new word (Korean or Latin, up to 6 characters) into the field at the top and
-press Enter — the current text dissolves into the same dispersion burst a fast drag
-triggers, and reforms as the new one, instead of snapping directly to it. The word
-you replaced doesn't just vanish: it lingers as a faint, cooler-toned echo for a
-few seconds before fading out.
+press Enter — or tap one of the suggestion chips beneath it for a zero-keystroke
+shortcut to the same thing — and the current text dissolves into the same dispersion
+burst a fast drag triggers, reforming as the new one instead of snapping directly to
+it. The word you replaced doesn't just vanish: it lingers as a faint, cooler-toned
+echo for a few seconds before fading out.
 
-Dark, minimal, monochrome. No UI beyond that input and a hint that fades away the
-moment you touch the space.
+Dark, minimal, monochrome. No UI beyond that input, its suggestion chips, and a hint
+that fades away the moment you touch the space.
 
 ## Interactions
 
@@ -27,6 +28,7 @@ moment you touch the space.
 | Click / tap | A ring expands from that point over ~0.9s, pushing particles it passes and flashing brighter, then fades |
 | Scroll | Dollies the camera back and expands the whole particle field outward, reversibly |
 | Two-finger twist / pinch (touch) | Twisting swirls the field around the view axis; pinching in/out compresses or spreads it — both spring back to normal the instant a finger lifts |
+| Tap a suggestion chip | Submits that word the same as typing it + Enter — a curated row of short, evocative words (혼, 빛, 꿈, 숨, 별) beneath the input; the currently-active word reads as selected |
 
 Works with mouse and touch alike (built on the Pointer Events API). Scroll is
 wheel/scrollbar-driven — it's not layered onto the same single-finger touch gesture
@@ -135,6 +137,17 @@ rates were hand-typed inline with no naming across five files, the two CSS
 opacity fades used the weak built-in `ease` instead of a proper ease-out curve,
 and submitting a keyword had no acknowledgment on the 2D layer beyond the 3D
 dissolve. All four fixed.
+
+A row of tappable suggestion chips (혼, 빛, 꿈, 숨, 별) now sits beneath the keyword
+input — the same destination as typing (`onSubmit`), just a zero-keystroke shortcut,
+with the currently-active word reading as selected. Styled and animated per the
+`apple-design` skill: press feedback fires on pointer-down rather than release,
+uses a critically-damped (no-overshoot) scale since it's a discrete tap commit
+rather than a momentum gesture, and the tap itself commits via the native `click`
+event so cancel-by-dragging-off-the-chip comes for free rather than needing custom
+gesture tracking. Kept the native focus ring (unlike the input, which replaces it
+with its own border transition) since these are otherwise unlabeled icon-like
+buttons.
 
 Deliberately not built yet:
 - **A second page section to scroll into.** The scroll effect is real and reversible,
