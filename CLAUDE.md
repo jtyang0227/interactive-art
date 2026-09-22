@@ -30,6 +30,33 @@ There is no test suite. Verification is: `tsc -b` clean, `eslint .` clean,
 checking and a clean build do not prove a shader or interaction actually
 looks right.
 
+## Working style
+
+- **State the assumption and proceed.** When a request reads more than one
+  way, pick the most likely reading, say which one in a line, and keep
+  going. Only stop to ask when the answer changes what gets built and a
+  wrong guess is expensive to undo — not for "how" questions with an
+  obvious default.
+- **Minimum code for the problem in front of you.** No config knobs,
+  flexibility, or error handling for a scenario that can't occur here — the
+  "Hard conventions" below already prune a lot of this (one draw call, no
+  per-effect reduced-motion branching, decay rates named locally rather
+  than pooled into a shared module). If a fix takes 200 lines to do what 50
+  would, it's not done yet.
+- **Touch only what the task needs.** Don't refactor or reformat adjacent
+  code while fixing something else, however tempting — that kind of pass
+  belongs in `plans/` (see the `improve-animations` skill), not folded into
+  an unrelated change. Remove an import or variable your own edit orphaned;
+  leave other pre-existing dead code alone unless asked.
+- **State exactly what you verified, not just that you did.** The bar
+  above (`tsc -b` / `eslint .` / `vite build` clean, then a visual check)
+  is the floor for "done" — report which of those actually ran and what
+  each one returned, rather than asserting "it works."
+- **End with the one thing worth carrying forward**, not a diff recap —
+  why this approach over the obvious one, which default you leaned on,
+  what breaks first if this scales. Skip it when the change is trivial or
+  the reason is already obvious from the code.
+
 ## Architecture
 
 ```
